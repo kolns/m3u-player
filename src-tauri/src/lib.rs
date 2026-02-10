@@ -247,7 +247,6 @@ async fn start_proxy_server(state: Arc<AppState>) -> u16 {
         .expect("Failed to bind proxy server");
 
     let port = listener.local_addr().unwrap().port();
-    println!("Stream proxy started on http://127.0.0.1:{}", port);
 
     tokio::spawn(async move {
         axum::serve(listener, app).await.unwrap();

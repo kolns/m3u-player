@@ -1,12 +1,12 @@
 [package]
-name = "tv-app"
-version = "0.1.0"
+name = "m3u-player"
+version = "1.0.0"
 description = "m3u Player — HLS channel viewer"
 authors = ["mike"]
 edition = "2021"
 
 [lib]
-name = "tv_app_lib"
+name = "m3u_player_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

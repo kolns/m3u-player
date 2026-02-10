@@ -31,7 +31,13 @@ function destroyPlayers() {
         if (hlsInstance._pauseHandler && hlsInstance._videoEl) {
             hlsInstance._videoEl.removeEventListener('pause', hlsInstance._pauseHandler);
         }
-        hlsInstance.destroy();
+        try {
+            hlsInstance.stopLoad();
+            hlsInstance.detachMedia();
+            hlsInstance.destroy();
+        } catch (e) {
+            console.error('Error destroying HLS instance:', e);
+        }
         hlsInstance = null;
     }
     if (mpegtsPlayer) {
@@ -40,12 +46,21 @@ function destroyPlayers() {
             mpegtsPlayer.unload();
             mpegtsPlayer.detachMediaElement();
             mpegtsPlayer.destroy();
-        } catch { /* ignore */ }
+        } catch (e) {
+            console.error('Error destroying mpegts instance:', e);
+        }
         mpegtsPlayer = null;
     }
+
     videoEl.pause();
+    // Setting src to empty string is often safer than load() on Linux/WebKit
+    videoEl.src = '';
     videoEl.removeAttribute('src');
-    videoEl.load();
+    try {
+        videoEl.load();
+    } catch (e) {
+        console.warn('videoEl.load() failed:', e);
+    }
 }
 /**
  * Stop any active playback and cleanup.
@@ -167,7 +182,6 @@ export function playChannel(url) {
         // Try to convert TS URL to HLS for maximum compatibility
         const hlsUrl = tryConvertToHLS(originalUrl);
         if (hlsUrl && typeof Hls !== 'undefined' && Hls.isSupported() && proxyPort) {
-            console.log('Converting TS stream to HLS:', originalUrl, '->', hlsUrl);
             playHLS(buildProxyUrl(hlsUrl, proxyPort));
         } else if (typeof mpegts !== 'undefined' && mpegts.isSupported()) {
             // Fallback to mpegts.js for raw TS that can't be converted

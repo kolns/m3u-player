@@ -66,60 +66,146 @@
       </button>
     </div>
 
-    <!-- Easter egg credits -->
-    <div id="credits-egg">
-      <button id="credits-star" title="✦" aria-label="Credits">✦</button>
-      <div id="credits-popover" class="hidden">
-        <div class="credits-content">
-          <div class="credits-header">Powered by</div>
-          <div class="credits-links">
-            <a href="https://getchannels.com/dvr-server/" target="_blank" rel="noopener" class="credits-link">
-              <span class="credits-label">Channels DVR</span>
-              <span class="credits-tagline">Your TV, your way</span>
-            </a>
-            <a href="https://github.com/hjdhjd/prismcast" target="_blank" rel="noopener" class="credits-link">
-              <span class="credits-label">PrismCast</span>
-              <span class="credits-tagline">Streaming, refracted</span>
-            </a>
-          </div>
-          <div class="credits-footer">https://github.com/mike-d-smith/tv</div>
-        </div>
-      </div>
+    <div id="footer-center">
+      <button id="channels-btn" title="Show channels">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="18" rx="2" />
+          <path d="M8 7h8M8 12h8M8 17h4" />
+        </svg>
+        <span>Channels</span>
+      </button>
+      <button id="sources-btn" title="Show sources">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <path
+            d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41" />
+        </svg>
+        <span>Sources</span>
+      </button>
     </div>
 
-    <button id="channels-btn" title="Show channels">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-        stroke-linejoin="round">
-        <rect x="2" y="3" width="20" height="18" rx="2" />
-        <path d="M8 7h8M8 12h8M8 17h4" />
-      </svg>
-      <span>Channels</span>
-    </button>
+    <!-- Credits Trigger -->
+    <div id="credits-trigger">
+      <button id="credits-star" title="Credits & Shoutouts" aria-label="Credits">✦</button>
+    </div>
   </footer>
 
-  <!-- Channel Drawer -->
+  <!-- Credits Modal -->
+  <div id="credits-modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2>Community Shoutouts</h2>
+          <p>m3u Player works best with these amazing projects</p>
+        </div>
+        <button id="credits-close" class="modal-close">&times;</button>
+      </div>
+
+      <div class="modal-content">
+        <div class="credits-grid">
+          <!-- Channels DVR -->
+          <a href="https://getchannels.com" class="credit-card" target="_blank">
+            <div class="card-icon">📺</div>
+            <div class="card-body">
+              <h3>Channels DVR</h3>
+              <p>The ultimate personal media server for live TV.</p>
+              <span class="card-link">getchannels.com</span>
+            </div>
+          </a>
+
+          <!-- Plex for Channels -->
+          <a href="https://github.com/jgomez177/plex-for-channels" class="credit-card" target="_blank">
+            <div class="card-icon">📽️</div>
+            <div class="card-body">
+              <h3>Plex for Channels</h3>
+              <p>by <strong>jgomez177</strong> — Bridge Plex to Channels DVR.</p>
+              <span class="card-link">github.com/jgomez177</span>
+            </div>
+          </a>
+
+          <!-- Pluto for Channels -->
+          <a href="https://github.com/jgomez177/pluto-for-channels" class="credit-card" target="_blank">
+            <div class="card-icon">🪐</div>
+            <div class="card-body">
+              <h3>Pluto for Channels</h3>
+              <p>by <strong>jgomez177</strong> — Watch Pluto TV in your favorite player.</p>
+              <span class="card-link">github.com/jgomez177</span>
+            </div>
+          </a>
+
+          <!-- Tubi for Channels -->
+          <a href="https://github.com/jgomez177/tubi-for-channels" class="credit-card" target="_blank">
+            <div class="card-icon">🎞️</div>
+            <div class="card-body">
+              <h3>Tubi for Channels</h3>
+              <p>by <strong>jgomez177</strong> — Stream Tubi content anywhere.</p>
+              <span class="card-link">github.com/jgomez177</span>
+            </div>
+          </a>
+
+          <!-- PrismCast -->
+          <a href="https://github.com/hjdhjd/prismcast" class="credit-card" target="_blank">
+            <div class="card-icon">🌈</div>
+            <div class="card-body">
+              <h3>PrismCast</h3>
+              <p>by <strong>hjdhjd</strong> — Premium streaming engine.</p>
+              <span class="card-link">github.com/hjdhjd</span>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <p>mike_here - <span class="repo-link">https://github.com/kolns/m3u-player</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drawer Backdrop (shared) -->
   <div id="drawer-backdrop" class="hidden"></div>
-  <aside id="channel-drawer">
-    <div id="drawer-handle">
-      <div id="drawer-handle-bar"></div>
-    </div>
 
-    <!-- Tab Navigation -->
-    <div id="drawer-tabs">
-      <button class="drawer-tab active" data-tab="channels">My Channels</button>
-      <button class="drawer-tab" data-tab="sources">Sources</button>
+  <!-- Channel Drawer -->
+  <aside id="channel-drawer" class="drawer">
+    <div class="drawer-header">
+      <h3>My Channels</h3>
+      <button class="drawer-close" title="Close">×</button>
     </div>
-
-    <!-- Tab 1: My Channels -->
     <div id="tab-channels" class="tab-content">
       <div id="channel-grid"></div>
       <p id="no-channels" class="empty-state">
-        Add channels from the <strong>Sources</strong> tab to get started
+        Add channels from the <strong>Sources</strong> menu to get started
       </p>
     </div>
+  </aside>
 
-    <!-- Tab 2: Manage Sources -->
-    <div id="tab-sources" class="tab-content hidden">
+  <!-- Settings Drawer -->
+  <aside id="settings-drawer" class="drawer">
+    <div class="drawer-header">
+      <div id="settings-header-content">
+        <h3>Sources</h3>
+        <!-- Browse Header (nested inside settings when browsing) -->
+        <div id="browse-header" class="hidden">
+          <button id="browse-back" title="Back to sources">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <div id="browse-title">
+            <h3 id="browse-source-name"></h3>
+            <span id="browse-count"></span>
+          </div>
+          <button id="browse-add-all" class="text-btn">Add All</button>
+        </div>
+      </div>
+      <button class="drawer-close" title="Close">×</button>
+    </div>
+
+    <!-- Tab: Manage Sources -->
+    <div id="tab-sources" class="tab-content">
       <!-- Add Source Form -->
       <div id="add-source-form">
         <input type="text" id="source-name" placeholder="Source name (e.g. Channels DVR)" autocomplete="off" />
@@ -133,21 +219,8 @@
       </p>
     </div>
 
-    <!-- Tab 3: Browse Source (shown when browsing a source's channels) -->
+    <!-- Tab: Browse Source -->
     <div id="tab-browse" class="tab-content hidden">
-      <div id="browse-header">
-        <button id="browse-back" title="Back to sources">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <div id="browse-title">
-          <h3 id="browse-source-name"></h3>
-          <span id="browse-count"></span>
-        </div>
-        <button id="browse-add-all" class="text-btn">Add All</button>
-      </div>
       <div id="browse-grid"></div>
       <div id="browse-loading" class="empty-state hidden">Loading channels...</div>
     </div>

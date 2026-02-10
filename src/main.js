@@ -10,56 +10,55 @@ import {
   reorderChannels, getSourceColor,
 } from './store.js';
 
-// DOM references
-const videoPlayer = document.getElementById('video-player');
-const playerOverlay = document.getElementById('player-overlay');
-const nowPlayingDot = document.getElementById('now-playing-dot');
-const nowPlayingName = document.getElementById('now-playing-name');
-const stopBtn = document.getElementById('stop-btn');
-const channelsBtn = document.getElementById('channels-btn');
-const channelDrawer = document.getElementById('channel-drawer');
-const drawerBackdrop = document.getElementById('drawer-backdrop');
-
-// Drawer tabs
-const tabButtons = document.querySelectorAll('.drawer-tab');
-const tabChannels = document.getElementById('tab-channels');
-const tabSources = document.getElementById('tab-sources');
-const tabBrowse = document.getElementById('tab-browse');
-
-// My Channels
-const channelGrid = document.getElementById('channel-grid');
-const noChannels = document.getElementById('no-channels');
-
-// Sources
-const sourceNameInput = document.getElementById('source-name');
-const sourceUrlInput = document.getElementById('source-url');
-const addSourceBtn = document.getElementById('add-source-btn');
-const sourceError = document.getElementById('source-error');
-const sourceList = document.getElementById('source-list');
-const noSources = document.getElementById('no-sources');
-
-// Browse
-const browseBack = document.getElementById('browse-back');
-const browseSourceName = document.getElementById('browse-source-name');
-const browseCount = document.getElementById('browse-count');
-const browseAddAll = document.getElementById('browse-add-all');
-const browseGrid = document.getElementById('browse-grid');
-const browseLoading = document.getElementById('browse-loading');
-
-/** Proxy port from Rust backend */
+// State
 let proxyPort = 0;
-
-/** Currently active channel URL */
 let activeChannelUrl = null;
-
-/** Source being browsed */
 let browsingSource = null;
-
-/** Channels fetched from the source being browsed */
 let browsedChannels = [];
+
+// DOM References (assigned in init)
+let videoPlayer, playerOverlay, nowPlayingDot, nowPlayingName, stopBtn;
+let channelsBtn, sourcesBtn, channelDrawer, settingsDrawer, drawerBackdrop;
+let tabChannels, tabSources, tabBrowse, channelGrid, noChannels;
+let sourceNameInput, sourceUrlInput, addSourceBtn, sourceError, sourceList, noSources;
+let browseHeader, browseBack, browseSourceName, browseCount, browseAddAll, browseGrid, browseLoading;
 
 // ── Initialization ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  // Initialize DOM references
+  videoPlayer = document.getElementById('video-player');
+  playerOverlay = document.getElementById('player-overlay');
+  nowPlayingDot = document.getElementById('now-playing-dot');
+  nowPlayingName = document.getElementById('now-playing-name');
+  stopBtn = document.getElementById('stop-btn');
+  channelsBtn = document.getElementById('channels-btn');
+  sourcesBtn = document.getElementById('sources-btn');
+  channelDrawer = document.getElementById('channel-drawer');
+  settingsDrawer = document.getElementById('settings-drawer');
+  drawerBackdrop = document.getElementById('drawer-backdrop');
+
+  tabChannels = document.getElementById('tab-channels');
+  tabSources = document.getElementById('tab-sources');
+  tabBrowse = document.getElementById('tab-browse');
+
+  channelGrid = document.getElementById('channel-grid');
+  noChannels = document.getElementById('no-channels');
+
+  sourceNameInput = document.getElementById('source-name');
+  sourceUrlInput = document.getElementById('source-url');
+  addSourceBtn = document.getElementById('add-source-btn');
+  sourceError = document.getElementById('source-error');
+  sourceList = document.getElementById('source-list');
+  noSources = document.getElementById('no-sources');
+
+  browseHeader = document.getElementById('browse-header');
+  browseBack = document.getElementById('browse-back');
+  browseSourceName = document.getElementById('browse-source-name');
+  browseCount = document.getElementById('browse-count');
+  browseAddAll = document.getElementById('browse-add-all');
+  browseGrid = document.getElementById('browse-grid');
+  browseLoading = document.getElementById('browse-loading');
+
   initPlayer(videoPlayer);
 
   // Window controls
@@ -68,25 +67,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('titlebar-maximize').addEventListener('click', () => appWindow.toggleMaximize());
   document.getElementById('titlebar-close').addEventListener('click', () => appWindow.close());
 
-  // Credits Easter egg
+  // Credits Modal
   const creditsStar = document.getElementById('credits-star');
-  const creditsPopover = document.getElementById('credits-popover');
+  const creditsModal = document.getElementById('credits-modal');
+  const creditsClose = document.getElementById('credits-close');
+
   creditsStar.addEventListener('click', (e) => {
     e.stopPropagation();
-    const isOpen = creditsPopover.classList.contains('visible');
-    creditsPopover.classList.toggle('visible', !isOpen);
-    creditsPopover.classList.toggle('hidden', isOpen);
-    creditsStar.classList.toggle('active', !isOpen);
+    creditsModal.classList.remove('hidden');
+    requestAnimationFrame(() => creditsModal.classList.add('visible'));
   });
-  document.addEventListener('click', () => {
-    creditsPopover.classList.remove('visible');
-    creditsPopover.classList.add('hidden');
-    creditsStar.classList.remove('active');
+
+  creditsClose.addEventListener('click', () => {
+    creditsModal.classList.remove('visible');
+    setTimeout(() => creditsModal.classList.add('hidden'), 300);
   });
-  creditsPopover.addEventListener('click', (e) => e.stopPropagation());
+
+  creditsModal.querySelector('.modal-backdrop').addEventListener('click', () => {
+    creditsModal.classList.remove('visible');
+    setTimeout(() => creditsModal.classList.add('hidden'), 300);
+  });
 
   // Open credit links in system browser via Tauri opener
-  creditsPopover.querySelectorAll('a[href]').forEach((link) => {
+  creditsModal.querySelectorAll('a[href]').forEach((link) => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
       window.__TAURI__.opener.openUrl(link.href);
@@ -108,21 +111,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // If no sources yet, open drawer to Sources tab
   if (getSources().length === 0) {
-    openDrawer();
-    switchTab('sources');
+    toggleDrawer(settingsDrawer, sourcesBtn);
   }
 
   // Event listeners
   channelsBtn.addEventListener('click', () => {
-    openDrawer();
     switchTab('channels');
+    toggleDrawer(channelDrawer, channelsBtn);
   });
-  drawerBackdrop.addEventListener('click', closeDrawer);
-  document.getElementById('drawer-handle').addEventListener('click', closeDrawer);
+  sourcesBtn.addEventListener('click', () => {
+    switchTab('sources');
+    toggleDrawer(settingsDrawer, sourcesBtn);
+  });
 
-  // Tabs
-  tabButtons.forEach((btn) => {
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  drawerBackdrop.addEventListener('click', closeAllDrawers);
+
+  // Close buttons in drawers
+  document.querySelectorAll('.drawer-close').forEach(btn => {
+    btn.addEventListener('click', closeAllDrawers);
   });
 
   // Add source
@@ -139,40 +145,104 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Escape
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && channelDrawer.classList.contains('drawer-open')) {
-      closeDrawer();
+    if (e.key === 'Escape') {
+      closeAllDrawers();
+      const creditsModal = document.getElementById('credits-modal');
+      creditsModal.classList.remove('visible');
+      setTimeout(() => creditsModal.classList.add('hidden'), 300);
     }
+  });
+  // Drag-to-reorder grid listeners
+  channelGrid.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    // Highlight the closest button as the drop target
+    channelGrid.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over'));
+    const target = getClosestButton(e.clientX, e.clientY);
+    if (target && target.dataset.id !== draggedId) {
+      target.classList.add('drag-over');
+    }
+  });
+
+  channelGrid.addEventListener('dragleave', (e) => {
+    // Only clear highlights when leaving the grid entirely
+    if (!channelGrid.contains(e.relatedTarget)) {
+      channelGrid.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over'));
+    }
+  });
+
+  channelGrid.addEventListener('drop', (e) => {
+    e.preventDefault();
+    channelGrid.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over'));
+
+    const target = getClosestButton(e.clientX, e.clientY);
+    if (!draggedId || !target || target.dataset.id === draggedId) return;
+
+    const buttons = [...channelGrid.querySelectorAll('.channel-btn')];
+    const ids = buttons.map((b) => b.dataset.id);
+    const fromIdx = ids.indexOf(draggedId);
+    const toIdx = ids.indexOf(target.dataset.id);
+
+    if (fromIdx === -1 || toIdx === -1) return;
+
+    // Remove from old position, then adjust insertion index:
+    // dragging downward shifts elements left by one after the removal.
+    ids.splice(fromIdx, 1);
+    const insertIdx = fromIdx < toIdx ? toIdx - 1 : toIdx;
+    ids.splice(insertIdx, 0, draggedId);
+
+    reorderChannels(ids);
+    renderMyChannels();
   });
 });
 
 // ── Drawer ──────────────────────────────────────────────────
-function openDrawer() {
-  channelDrawer.classList.add('drawer-open');
-  drawerBackdrop.classList.remove('hidden');
-  requestAnimationFrame(() => drawerBackdrop.classList.add('visible'));
+function toggleDrawer(drawer, button) {
+  const isOpen = drawer.classList.contains('drawer-open');
+
+  if (isOpen) {
+    closeAllDrawers();
+  } else {
+    closeAllDrawers(); // Close any other drawer first
+    drawer.classList.add('drawer-open');
+    button.classList.add('active');
+    drawerBackdrop.classList.remove('hidden');
+    requestAnimationFrame(() => drawerBackdrop.classList.add('visible'));
+  }
 }
 
-function closeDrawer() {
-  channelDrawer.classList.remove('drawer-open');
+function closeAllDrawers() {
+  document.querySelectorAll('.drawer').forEach(d => d.classList.remove('drawer-open'));
+  document.querySelectorAll('#footer-center button').forEach(b => b.classList.remove('active'));
+
   drawerBackdrop.classList.remove('visible');
   setTimeout(() => {
-    if (!channelDrawer.classList.contains('drawer-open')) {
+    const anyOpen = document.querySelector('.drawer.drawer-open');
+    if (!anyOpen) {
       drawerBackdrop.classList.add('hidden');
     }
   }, 350);
 }
 
 function switchTab(tab) {
-  // Update tab buttons
-  tabButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.tab === tab));
+  // tab-channels is now in a separate drawer, so we only hide it if we are switching
+  // to another tab within THAT drawer (which there aren't any yet, but for consistency)
+  if (tab === 'channels') {
+    tabChannels.classList.remove('hidden');
+  }
 
-  // Show/hide tab content
-  tabChannels.classList.toggle('hidden', tab !== 'channels');
-  tabSources.classList.toggle('hidden', tab !== 'sources');
-  tabBrowse.classList.toggle('hidden', tab !== 'browse');
+  // Settings drawer tabs
+  if (tab === 'sources' || tab === 'browse') {
+    tabSources.classList.toggle('hidden', tab !== 'sources');
+    tabBrowse.classList.toggle('hidden', tab !== 'browse');
+  }
 
-  // Show/hide tab bar when in browse mode
-  document.getElementById('drawer-tabs').classList.toggle('hidden', tab === 'browse');
+  // Browse header visibility in settings drawer
+  if (browseHeader) {
+    browseHeader.classList.toggle('hidden', tab !== 'browse');
+    document.querySelector('#settings-drawer .drawer-header h3').classList.toggle('hidden', tab === 'browse');
+  }
 }
 
 // ── My Channels ─────────────────────────────────────────────
@@ -253,7 +323,7 @@ function selectChannel(channel) {
   document.body.classList.add('is-playing');
   stopBtn.classList.remove('hidden');
   playChannel(toProxyUrl(channel.url));
-  closeDrawer();
+  closeAllDrawers();
 }
 
 /** Stop current channel and reset UI */
@@ -304,51 +374,6 @@ function getClosestButton(x, y) {
   }
   return closest;
 }
-
-// Grid-level dragover: allow drop anywhere and highlight nearest button
-channelGrid.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-
-  // Highlight the closest button as the drop target
-  channelGrid.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over'));
-  const target = getClosestButton(e.clientX, e.clientY);
-  if (target && target.dataset.id !== draggedId) {
-    target.classList.add('drag-over');
-  }
-});
-
-channelGrid.addEventListener('dragleave', (e) => {
-  // Only clear highlights when leaving the grid entirely
-  if (!channelGrid.contains(e.relatedTarget)) {
-    channelGrid.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over'));
-  }
-});
-
-// Grid-level drop: compute insertion from closest button
-channelGrid.addEventListener('drop', (e) => {
-  e.preventDefault();
-  channelGrid.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over'));
-
-  const target = getClosestButton(e.clientX, e.clientY);
-  if (!draggedId || !target || target.dataset.id === draggedId) return;
-
-  const buttons = [...channelGrid.querySelectorAll('.channel-btn')];
-  const ids = buttons.map((b) => b.dataset.id);
-  const fromIdx = ids.indexOf(draggedId);
-  const toIdx = ids.indexOf(target.dataset.id);
-
-  if (fromIdx === -1 || toIdx === -1) return;
-
-  // Remove from old position, then adjust insertion index:
-  // dragging downward shifts elements left by one after the removal.
-  ids.splice(fromIdx, 1);
-  const insertIdx = fromIdx < toIdx ? toIdx - 1 : toIdx;
-  ids.splice(insertIdx, 0, draggedId);
-
-  reorderChannels(ids);
-  renderMyChannels();
-});
 
 function onDragEnd(e) {
   e.currentTarget.classList.remove('dragging');
