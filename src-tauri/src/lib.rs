@@ -258,6 +258,14 @@ async fn start_proxy_server(state: Arc<AppState>) -> u16 {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(target_os = "linux")]
+    {
+        // Fix for jitter/tearing on Linux (WebKitGTK 2.42+)
+        if std::env::var("WEBKIT_DISABLE_DMABUF_RENDERER").is_err() {
+            std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+        }
+    }
+
     let state = Arc::new(AppState {
         client: Client::new(),
         proxy_port: RwLock::new(0),
