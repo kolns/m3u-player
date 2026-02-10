@@ -144,7 +144,7 @@ The bundled app will be in `src-tauri/target/release/bundle/`.
 
 ## Recommended IDE Setup
 
-- **[Antigravity](https://antigravity.dev/)** — AI-native editor with built-in Tauri and Rust support. Open the project folder and run `npx tauri dev` from the integrated terminal.
+- **[Antigravity](https://antigravity.google/)** — AI-native editor with built-in Tauri and Rust support. Open the project folder and run `npx tauri dev` from the integrated terminal.
 
 ## License
 
