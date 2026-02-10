@@ -2,6 +2,14 @@
 
 A desktop IPTV player built with [Tauri 2](https://v2.tauri.app/) + vanilla HTML/CSS/JS. Add M3U playlist sources, browse channels, and play live HLS & MPEG-TS streams — all through a local Rust proxy that handles CORS, redirects, and manifest rewriting.
 
+## 📥 Download
+
+Get the latest installers for **Windows, macOS, and Linux** on the **[Releases](https://github.com/kolns/m3u-player/releases)** page.
+
+- **Windows**: `.msi` or `.exe`
+- **macOS**: `.dmg` (Intel & Apple Silicon)
+- **Linux**: `.deb` or `.AppImage`
+
 ## Tech Stack
 
 | Layer | Technology | Purpose |
