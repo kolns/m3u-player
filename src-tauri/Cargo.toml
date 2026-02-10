@@ -1,0 +1,25 @@
+[package]
+name = "tv-app"
+version = "0.1.0"
+description = "m3u Player — HLS channel viewer"
+authors = ["mike"]
+edition = "2021"
+
+[lib]
+name = "tv_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.12", features = ["rustls-tls", "stream"], default-features = false }
+tokio = { version = "1", features = ["full"] }
+axum = "0.8"
+png = "0.17"
+url = "2"
+urlencoding = "2"
