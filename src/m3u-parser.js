@@ -14,9 +14,10 @@
 /**
  * Parse an M3U playlist string into an array of Channel objects.
  * @param {string} content - Raw M3U file content
+ * @param {string} [baseUrl] - Base URL to resolve relative paths against
  * @returns {Channel[]}
  */
-export function parseM3U(content) {
+export function parseM3U(content, baseUrl = '') {
   const lines = content.split(/\r?\n/);
   const channels = [];
   let current = null;
@@ -27,19 +28,35 @@ export function parseM3U(content) {
     if (line.startsWith('#EXTINF:')) {
       current = parseExtInf(line);
     } else if (line && !line.startsWith('#') && current) {
-      current.url = line;
+      current.url = resolveUrl(line, baseUrl);
       channels.push(current);
       current = null;
     } else if (line && !line.startsWith('#') && !current) {
       // URL line without preceding #EXTINF — use URL as name
+      const resolvedUrl = resolveUrl(line, baseUrl);
       channels.push({
-        name: extractNameFromUrl(line),
-        url: line,
+        name: extractNameFromUrl(resolvedUrl),
+        url: resolvedUrl,
       });
     }
   }
 
   return channels;
+}
+
+/**
+ * Resolve a relative URL against a base URL.
+ * @param {string} url
+ * @param {string} base
+ * @returns {string}
+ */
+function resolveUrl(url, base) {
+  if (!base) return url;
+  try {
+    return new URL(url, base).toString();
+  } catch {
+    return url;
+  }
 }
 
 /**
@@ -107,15 +124,16 @@ function extractNameFromUrl(url) {
  * @throws {Error} if fetch fails or content is invalid
  */
 export async function fetchAndParseM3U(url) {
-  let content;
+  let result;
   try {
     // Use Tauri IPC to fetch from the Rust backend (no CORS issues)
-    content = await window.__TAURI__.core.invoke('fetch_url', { url });
+    // Backend now returns { body: string, final_url: string }
+    result = await window.__TAURI__.core.invoke('fetch_url', { url });
   } catch (err) {
     throw new Error(typeof err === 'string' ? err : `Failed to fetch playlist: ${err.message || err}`);
   }
 
-  const channels = parseM3U(content);
+  const channels = parseM3U(result.body, result.final_url);
 
   if (channels.length === 0) {
     throw new Error('No channels found in playlist. Make sure the URL points to a valid M3U file.');

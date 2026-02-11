@@ -6,10 +6,17 @@ use axum::{
     response::IntoResponse,
 };
 use reqwest::Client;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tauri::Manager;
 use tokio::sync::RwLock;
+
+/// Response shape for fetch_url
+#[derive(Serialize)]
+struct FetchResponse {
+    body: String,
+    final_url: String,
+}
 
 /// Shared state for the proxy server and Tauri commands.
 struct AppState {
@@ -24,7 +31,7 @@ struct AppState {
 async fn fetch_url(
     state: tauri::State<'_, Arc<AppState>>,
     url: String,
-) -> Result<String, String> {
+) -> Result<FetchResponse, String> {
     let response = state
         .client
         .get(&url)
@@ -40,10 +47,13 @@ async fn fetch_url(
         ));
     }
 
-    response
+    let final_url = response.url().to_string();
+    let body = response
         .text()
         .await
-        .map_err(|e| format!("Failed to read response: {}", e))
+        .map_err(|e| format!("Failed to read response: {}", e))?;
+
+    Ok(FetchResponse { body, final_url })
 }
 
 /// Tauri command: return the proxy port.

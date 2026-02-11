@@ -96,8 +96,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Get proxy port
-  proxyPort = await window.__TAURI__.core.invoke('get_proxy_port');
+  // Get proxy port (retry as it starts asynchronously in setup)
+  for (let i = 0; i < 20; i++) {
+    proxyPort = await window.__TAURI__.core.invoke('get_proxy_port');
+    if (proxyPort) break;
+    await new Promise(r => setTimeout(r, 100));
+  }
 
   // Load config
   await loadConfig();
